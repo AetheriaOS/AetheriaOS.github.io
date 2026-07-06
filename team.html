@@ -108,7 +108,35 @@
             align-items: center;
             justify-content: space-between;
             animation: navReveal 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
+            transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+            touch-action: pan-x;
+            cursor: grab;
         }
+        nav:active { cursor: grabbing; }
+        nav.nav-hidden { transform: translateY(-150%); }
+
+        .nav-handle {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            width: 60px;
+            height: 5px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.35);
+            z-index: 1001;
+            cursor: pointer;
+            touch-action: none;
+            transform: translateX(-50%) scaleX(0);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s;
+        }
+        .nav-handle.visible {
+            transform: translateX(-50%) scaleX(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .nav-handle:hover { background: rgba(255, 255, 255, 0.6); }
 
         .nav-left { display: flex; align-items: center; gap: 12px; }
         .nav-links { display: flex; align-items: center; gap: 4px; }
@@ -315,6 +343,8 @@
         </div>
     </nav>
 
+    <div class="nav-handle" id="navHandle" title="Pull down to show the menu"></div>
+
     <section class="page-header">
         <h1>Team</h1>
         <p>The people behind AetheriaOS.</p>
@@ -383,6 +413,61 @@
     </div>
 
     <script>
+        const navEl = document.querySelector('nav');
+        const navHandle = document.getElementById('navHandle');
+
+        navEl.addEventListener('animationend', () => {
+            navEl.style.animation = 'none';
+        }, { once: true });
+
+        function hideNav() {
+            navEl.classList.add('nav-hidden');
+            navHandle.classList.add('visible');
+        }
+        function showNav() {
+            navEl.classList.remove('nav-hidden');
+            navHandle.classList.remove('visible');
+        }
+
+        function makeDraggable(el, { onHide, onShow, direction }) {
+            let dragging = false;
+            let startY = 0;
+
+            function onMove(e) {
+                if (!dragging) return;
+                const deltaY = e.clientY - startY;
+                if (direction === 'hide' && deltaY < 0) {
+                    navEl.style.transform = `translateY(${deltaY}px)`;
+                } else if (direction === 'show' && deltaY > 0) {
+                    navEl.style.transform = `translateY(${-150 + Math.min(deltaY, 150) / 150 * 150}%)`;
+                }
+            }
+
+            function onUp(e) {
+                if (!dragging) return;
+                dragging = false;
+                navEl.style.transition = '';
+                navEl.style.transform = '';
+                const deltaY = e.clientY - startY;
+                if (direction === 'hide' && deltaY < -25) onHide();
+                if (direction === 'show' && deltaY > 25) onShow();
+                window.removeEventListener('pointermove', onMove);
+                window.removeEventListener('pointerup', onUp);
+            }
+
+            el.addEventListener('pointerdown', (e) => {
+                dragging = true;
+                startY = e.clientY;
+                navEl.style.transition = 'none';
+                window.addEventListener('pointermove', onMove);
+                window.addEventListener('pointerup', onUp);
+            });
+        }
+
+        makeDraggable(navEl, { onHide: hideNav, direction: 'hide' });
+        makeDraggable(navHandle, { onShow: showNav, direction: 'show' });
+        navHandle.addEventListener('click', showNav);
+
         const avatarBtn = document.getElementById('avatarBtn');
         const avatarDropdown = document.getElementById('avatarDropdown');
         avatarBtn.addEventListener('click', (e) => {
