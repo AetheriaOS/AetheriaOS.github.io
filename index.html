@@ -13,6 +13,8 @@
             --border: rgba(255, 255, 255, 0.12);
             --card-bg: #080808;
             --nav-bg: rgba(10, 10, 10, 0.7);
+            --accent: #ffffff;
+            --accent-glow: rgba(255, 255, 255, 0.15);
         }
 
         * {
@@ -33,6 +35,13 @@
             width: 100%;
             min-height: 100vh;
             position: relative;
+        }
+
+        #particleCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
         }
 
         .top-line {
@@ -98,19 +107,23 @@
             right: 25px;
             width: auto;
             z-index: 1000;
-            background: var(--nav-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 100px;
             padding: 6px 18px 6px 6px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             animation: navReveal 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
-            transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease;
             touch-action: pan-x;
             cursor: grab;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        nav:hover {
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
         }
         nav:active { cursor: grabbing; }
         nav.nav-hidden { transform: translateY(-150%); }
@@ -147,11 +160,25 @@
             font-weight: 500;
             padding: 8px 14px;
             border-radius: 50px;
-            transition: color 0.25s ease, background 0.25s ease;
+            transition: color 0.25s ease, background 0.25s ease, transform 0.2s ease;
             white-space: nowrap;
+            position: relative;
+            overflow: hidden;
         }
-        .nav-links a:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50px;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .nav-links a:hover { color: var(--text); }
+        .nav-links a:hover::before { transform: scale(1); opacity: 1; }
         .nav-links a.active { color: #000; background: #ffffff; }
+        .nav-links a.active::before { display: none; }
         .nav-links a:active { transform: scale(0.95); }
 
         @media (max-width: 560px) {
@@ -167,8 +194,10 @@
             font-size: 0.85rem; text-decoration: none;
             font-weight: 500; transition: 0.3s ease;
             white-space: nowrap;
+            position: relative;
+            overflow: hidden;
         }
-        .btn-download:hover { transform: scale(1.05); }
+        .btn-download:hover { transform: scale(1.05); box-shadow: 0 4px 20px rgba(255,255,255,0.2); }
         .btn-download:active { transform: scale(0.95); }
 
         .avatar-menu { position: relative; }
@@ -184,9 +213,9 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s;
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s, box-shadow 0.3s ease;
         }
-        .avatar-btn:hover { border-color: rgba(255,255,255,0.4); transform: scale(1.05); }
+        .avatar-btn:hover { border-color: rgba(255,255,255,0.4); transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.1); }
         .avatar-btn:active { transform: scale(0.88); }
         .avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
@@ -194,16 +223,16 @@
             position: absolute;
             top: calc(100% + 12px);
             left: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
+            background: rgba(8, 8, 8, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 18px;
             padding: 8px;
             min-width: 160px;
             display: flex;
             flex-direction: column;
             gap: 4px;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(24px) saturate(1.4);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
             transform-origin: top left;
             opacity: 0;
             visibility: hidden;
@@ -243,53 +272,25 @@
         .avatar-dropdown a:hover { transform: scale(1.05); background: #f0f0f0; }
         .avatar-dropdown a:active { transform: scale(0.95); }
 
-        .showcase {
-            width: 100%;
-            overflow: hidden;
-            margin-top: 0;
-            padding-top: 130px;
-            -webkit-mask-image: linear-gradient(to right, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
-            mask-image: linear-gradient(to right, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
-        }
-        .showcase-track {
-            display: flex;
-            gap: 20px;
-            width: max-content;
-            padding: 0 5%;
-            animation: showcaseSlide 16s ease-in-out infinite alternate;
-        }
-        .showcase-track img {
-            height: 260px;
-            width: auto;
-            flex-shrink: 0;
-            border-radius: 22px;
-            border: 1px solid var(--border);
-            object-fit: cover;
-            background: var(--card-bg);
-        }
-        @keyframes showcaseSlide {
-            from { transform: translateX(0); }
-            to { transform: translateX(var(--scroll-distance, -400px)); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .showcase-track { animation: none; }
-        }
-        @media (max-width: 480px) {
-            .showcase-track img { height: 170px; }
-        }
-
         .intro-section {
             max-width: 800px;
-            margin: 60px auto 0;
+            margin: 150px auto 0;
             padding: 0 5%;
             text-align: center;
             scroll-margin-top: 110px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.3s both;
         }
         .intro-section h2 {
             font-size: 1.6rem;
             font-weight: 400;
             margin-bottom: 16px;
             letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #b0b0b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .intro-section p {
             color: var(--subtext);
@@ -308,9 +309,25 @@
             padding: 8px 20px;
             font-size: 0.8rem;
             color: var(--subtext);
+            transition: 0.3s ease;
+            cursor: default;
+        }
+        .base-badge:hover {
+            border-color: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
         }
         .base-badge b { color: var(--text); font-weight: 500; }
-        .base-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; display: inline-block; }
+        .base-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; display: inline-block; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.9); }
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
 
         @media (min-width: 768px) {
             .intro-section h2 { font-size: 2rem; }
@@ -324,17 +341,27 @@
             margin-top: 90px;
             padding-bottom: 40px;
             letter-spacing: 1px;
+            opacity: 0;
+            animation: fadeUp 0.6s ease 0.6s both;
         }
         .footer p { color: #555; }
+        .footer::before {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
+            margin: 0 auto 20px;
+        }
 
         @media (max-width: 480px) {
-            .showcase { padding-top: 100px; }
+            .intro-section { margin-top: 120px; }
             .btn-download { padding: 9px 16px; font-size: 0.8rem; }
             nav { padding: 8px 14px 8px 20px; }
         }
 
         @media (orientation: landscape) and (max-height: 500px) {
-            .showcase { padding-top: 80px; }
+            .intro-section { margin-top: 100px; }
         }
 
         @media (min-resolution: 2dppx), (-webkit-min-device-pixel-ratio: 2) {
@@ -346,6 +373,7 @@
 </head>
 <body>
 
+    <canvas id="particleCanvas"></canvas>
     <div class="glare-bg"></div>
     <div class="top-line"></div>
 
@@ -370,17 +398,6 @@
 
     <div class="nav-handle" id="navHandle" title="Pull down to show the menu"></div>
 
-    <div class="showcase">
-        <div class="showcase-track" id="showcaseTrack">
-            <img src="image/1.png" alt="AetheriaOS screenshot" loading="lazy" onerror="this.remove()">
-            <img src="image/2.png" alt="AetheriaOS screenshot" loading="lazy" onerror="this.remove()">
-            <img src="image/3.png" alt="AetheriaOS screenshot" loading="lazy" onerror="this.remove()">
-            <img src="image/4.png" alt="AetheriaOS screenshot" loading="lazy" onerror="this.remove()">
-            <img src="image/5.png" alt="AetheriaOS screenshot" loading="lazy" onerror="this.remove()">
-            <img src="image/6.png" alt="AetheriaOS screenshot" loading="lazy" onerror="this.remove()">
-        </div>
-    </div>
-
     <section class="intro-section" id="about">
         <h2>What is AetheriaOS?</h2>
         <p>AetheriaOS is a custom ROM built to stay simple on the surface while still giving you the tools power users look for. No clutter, no unnecessary friction — just a smooth, reliable experience with a thoughtful set of extra features layered on top, wrapped in a clean and modern look.</p>
@@ -392,6 +409,89 @@
     </div>
 
     <script>
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouseX = 0, mouseY = 0;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.3;
+                this.speedY = (Math.random() - 0.5) * 0.3;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+                const dx = mouseX - this.x;
+                const dy = mouseY - this.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 150) {
+                    this.x -= dx * 0.01;
+                    this.y -= dy * 0.01;
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = Math.min(80, Math.floor((canvas.width * canvas.height) / 15000));
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.08 * (1 - dist/120)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
         const navEl = document.querySelector('nav');
         const navHandle = document.getElementById('navHandle');
 
@@ -459,24 +559,6 @@
             }
         });
 
-        function setupShowcaseSlide() {
-            const track = document.getElementById('showcaseTrack');
-            if (!track) return;
-            const container = track.parentElement;
-            const distance = track.scrollWidth - container.clientWidth;
-            if (distance > 0) {
-                track.style.setProperty('--scroll-distance', `-${distance}px`);
-                track.style.animationPlayState = 'running';
-            } else {
-                track.style.animation = 'none';
-            }
-        }
-        window.addEventListener('load', setupShowcaseSlide);
-        window.addEventListener('resize', setupShowcaseSlide);
-        Array.from(document.querySelectorAll('#showcaseTrack img')).forEach(img => {
-            img.addEventListener('load', setupShowcaseSlide);
-            img.addEventListener('error', setupShowcaseSlide);
-        });
     </script>
 </body>
 </html>
