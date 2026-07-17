@@ -35,6 +35,13 @@
             position: relative;
         }
 
+        #particleCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
         .top-line {
             position: fixed;
             top: 0;
@@ -98,19 +105,23 @@
             right: 25px;
             width: auto;
             z-index: 1000;
-            background: var(--nav-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 100px;
             padding: 6px 18px 6px 6px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             animation: navReveal 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
-            transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease;
             touch-action: pan-x;
             cursor: grab;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        nav:hover {
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
         }
         nav:active { cursor: grabbing; }
         nav.nav-hidden { transform: translateY(-150%); }
@@ -140,21 +151,38 @@
 
         .nav-left { display: flex; align-items: center; gap: 12px; }
         .nav-links { display: flex; align-items: center; gap: 4px; }
-        .nav-links a {
+        .nav-links a, .nav-links span {
             color: var(--subtext);
             text-decoration: none;
             font-size: 0.85rem;
             font-weight: 500;
             padding: 8px 14px;
             border-radius: 50px;
-            transition: color 0.25s ease, background 0.25s ease;
+            transition: color 0.25s ease, background 0.25s ease, transform 0.2s ease;
             white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            display: inline-block;
         }
-        .nav-links a:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
-        .nav-links a.active { color: #000; background: #ffffff; }
+        .nav-links a::before, .nav-links span::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50px;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .nav-links a:hover, .nav-links span:hover { color: var(--text); }
+        .nav-links a:hover::before, .nav-links span:hover::before { transform: scale(1); opacity: 1; }
+        .nav-links a.active, .nav-links span.active { color: #000; background: #ffffff; }
+        .nav-links a.active::before, .nav-links span.active::before { display: none; }
+        .nav-links a:active, .nav-links span:active { transform: scale(0.95); }
 
         @media (max-width: 560px) {
-            .nav-links a { padding: 8px 10px; font-size: 0.78rem; }
+            .nav-links a, .nav-links span { padding: 8px 10px; font-size: 0.78rem; }
         }
 
         .avatar-menu { position: relative; }
@@ -170,9 +198,9 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s;
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s, box-shadow 0.3s ease;
         }
-        .avatar-btn:hover { border-color: rgba(255,255,255,0.4); transform: scale(1.05); }
+        .avatar-btn:hover { border-color: rgba(255,255,255,0.4); transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.1); }
         .avatar-btn:active { transform: scale(0.88); }
         .avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
@@ -180,16 +208,16 @@
             position: absolute;
             top: calc(100% + 12px);
             left: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
+            background: rgba(8, 8, 8, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 18px;
             padding: 8px;
             min-width: 160px;
             display: flex;
             flex-direction: column;
             gap: 4px;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(24px) saturate(1.4);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
             transform-origin: top left;
             opacity: 0;
             visibility: hidden;
@@ -234,22 +262,39 @@
             margin: 0 auto;
             padding: 170px 5% 0;
             text-align: center;
+            position: relative;
+            z-index: 2;
         }
         .page-header h1 {
             font-size: clamp(1.8rem, 4vw, 2.4rem);
             font-weight: 400;
             letter-spacing: -0.5px;
             margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffffff 0%, #b0b0b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0;
+            animation: fadeUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.2s both;
         }
         .page-header p {
             color: var(--subtext);
             font-size: 0.95rem;
+            opacity: 0;
+            animation: fadeUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.35s both;
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
 
         .team-section {
             max-width: 900px;
             margin: 50px auto 0;
             padding: 0 5%;
+            position: relative;
+            z-index: 2;
         }
         .team-grid {
             display: grid;
@@ -257,7 +302,7 @@
             gap: 24px;
         }
         .team-card {
-            background: var(--card-bg);
+            background: rgba(8, 8, 8, 0.7);
             border: 1px solid var(--border);
             border-radius: 22px;
             padding: 28px 16px 22px;
@@ -265,9 +310,16 @@
             opacity: 0;
             transform: translateY(24px);
             animation: cardReveal 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
-            transition: transform 0.3s ease, border-color 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s ease, box-shadow 0.4s ease, background 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
         }
-        .team-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.3); }
+        .team-card:hover { 
+            transform: translateY(-8px); 
+            border-color: rgba(255,255,255,0.25); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3), 0 0 30px rgba(255,255,255,0.03);
+            background: rgba(12, 12, 12, 0.85);
+        }
 
         @keyframes cardReveal {
             0% { opacity: 0; transform: translateY(24px); }
@@ -289,7 +341,25 @@
             overflow: hidden;
             background: #111;
             border: 1px solid var(--border);
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease, border-color 0.3s ease;
+            position: relative;
         }
+        .team-avatar::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+        .team-card:hover .team-avatar {
+            transform: scale(1.08);
+            box-shadow: 0 0 30px rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.3);
+        }
+        .team-card:hover .team-avatar::before { opacity: 1; }
         .team-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .team-name { font-size: 1rem; font-weight: 500; margin-bottom: 4px; }
         .team-role { font-size: 0.8rem; color: var(--subtext); margin-bottom: 14px; }
@@ -301,9 +371,14 @@
             background: rgba(255,255,255,0.06);
             border: 1px solid var(--border);
             color: var(--text);
-            transition: background 0.25s ease, transform 0.2s ease;
+            transition: background 0.25s ease, transform 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
-        .team-socials a:hover { background: rgba(255,255,255,0.15); transform: scale(1.08); }
+        .team-socials a:hover { 
+            background: rgba(255,255,255,0.15); 
+            transform: scale(1.12); 
+            border-color: rgba(255,255,255,0.3);
+            box-shadow: 0 0 15px rgba(255,255,255,0.05);
+        }
         .team-socials svg { width: 15px; height: 15px; }
 
         .footer {
@@ -313,8 +388,20 @@
             margin-top: 90px;
             padding-bottom: 40px;
             letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            animation: fadeUp 0.6s ease 0.6s both;
         }
         .footer p { color: #555; }
+        .footer::before {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
+            margin: 0 auto 20px;
+        }
 
         @media (min-resolution: 2dppx), (-webkit-min-device-pixel-ratio: 2) {
             nav, .avatar-dropdown, .avatar-btn, .team-card {
@@ -325,6 +412,7 @@
 </head>
 <body>
 
+    <canvas id="particleCanvas"></canvas>
     <div class="glare-bg"></div>
     <div class="top-line"></div>
 
@@ -335,15 +423,15 @@
                     <img src="profile/avatar.png" alt="Foto Profil" width="200" height="200">
                 </button>
                 <div class="avatar-dropdown avatar-dropdown-left" id="avatarDropdown">
-                    <a href="https://github.com/AetheriaOS" target="_blank">GitHub</a>
-                    <a href="https://t.me/AetheriaOS_AOSP" target="_blank">Telegram</a>
+                    <a href="https://github.com/AetheriaOS" target="_blank" rel="noopener noreferrer">GitHub</a>
+                    <a href="https://t.me/AetheriaOS_AOSP" target="_blank" rel="noopener noreferrer">Telegram</a>
                 </div>
             </div>
         </div>
         <div class="nav-links">
-            <a href="./index.html#about">About</a>
-            <a href="./devices.html">Download</a>
-            <a href="./team.html" class="active">Team</a>
+            <span data-nav="index">About</span>
+            <span data-nav="devices">Download</span>
+            <span class="active" data-nav="team">Team</span>
         </div>
     </nav>
 
@@ -361,8 +449,8 @@
                 <div class="team-name">N1709</div>
                 <div class="team-role">Lead Developer &amp; Founder</div>
                 <div class="team-socials">
-                    <a href="https://github.com/N1709" target="_blank" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.02-.01-1.86-2.78.61-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.55 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></a>
-                    <a href="https://t.me/NKB0B" target="_blank" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
+                    <a href="https://github.com/N1709" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.02-.01-1.86-2.78.61-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.55 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></a>
+                    <a href="https://t.me/NKB0B" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
                 </div>
             </div>
             <div class="team-card">
@@ -370,8 +458,8 @@
                 <div class="team-name">Farhan</div>
                 <div class="team-role">Device Maintainer &amp; Member</div>
                                 <div class="team-socials">
-                    <a href="https://github.com/Gtajisan" target="_blank" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.02-.01-1.86-2.78.61-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.55 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></a>
-                    <a href="https://t.me/FARHAN_MUH_TASIM" target="_blank" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
+                    <a href="https://github.com/Gtajisan" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.02-.01-1.86-2.78.61-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.55 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></a>
+                    <a href="https://t.me/FARHAN_MUH_TASIM" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
                 </div>
             </div>
             <div class="team-card">
@@ -379,8 +467,8 @@
                 <div class="team-name">Alpha</div>
                 <div class="team-role">Device Maintainer &amp; Member</div>
                                 <div class="team-socials">
-                    <a href="https://github.com/console-ramoops" target="_blank" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.02-.01-1.86-2.78.61-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.55 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></a>
-                    <a href="https://t.me/alpha269" target="_blank" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
+                    <a href="https://github.com/console-ramoops" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.02-.01-1.86-2.78.61-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.55 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></a>
+                    <a href="https://t.me/alpha269" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
                 </div>
             </div>
             <div class="team-card">
@@ -388,8 +476,8 @@
                 <div class="team-name">Ganx</div>
                 <div class="team-role">Device Maintainer &amp; Member</div>
                                 <div class="team-socials">
-                    <a href="https://github.com/ganendra4u" target="_blank" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.02-.01-1.86-2.78.61-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.55 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></a>
-                    <a href="https://t.me/ganx0000" target="_blank" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
+                    <a href="https://github.com/ganendra4u" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.02-.01-1.86-2.78.61-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.55 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></a>
+                    <a href="https://t.me/ganx0000" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
                 </div>
             </div>
             <div class="team-card">
@@ -397,8 +485,8 @@
                 <div class="team-name">ReversedRuler</div>
                 <div class="team-role">Device Maintainer &amp; Member</div>
                                 <div class="team-socials">
-                    <a href="https://github.com/DarkKiller28" target="_blank" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.02-.01-1.86-2.78.61-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.55 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></a>
-                    <a href="https://t.me/ReversedRuler" target="_blank" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
+                    <a href="https://github.com/DarkKiller28" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.02-.01-1.86-2.78.61-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.55 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></a>
+                    <a href="https://t.me/ReversedRuler" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
                 </div>
             </div>
             <div class="team-card">
@@ -406,7 +494,7 @@
                 <div class="team-name">Nova</div>
                 <div class="team-role">Device Maintainer</div>
                                 <div class="team-socials">
-                    <a href="https://t.me/Mi8917" target="_blank" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
+                    <a href="https://t.me/Mi8917" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.3-.07-.46-.52-.16L7.74 13.3 3.64 12c-.9-.28-.9-.9.19-1.33l15.94-6.14c.75-.33 1.46.18 1.18 1.31l-2.71 12.79c-.19.9-.72 1.12-1.46.7l-4.03-2.98-1.94 1.87c-.21.21-.39.39-.79.39z"/></svg></a>
                 </div>
             </div>
         </div>
@@ -417,6 +505,105 @@
     </div>
 
     <script>
+
+        document.querySelectorAll('.nav-links span[data-nav]').forEach(el => {
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const target = this.getAttribute('data-nav');
+                if (target === 'index') {
+                    window.location.href = 'index.html';
+                } else if (target === 'devices') {
+                    window.location.href = 'devices.html';
+                } else if (target === 'team') {
+                    window.location.href = 'team.html';
+                }
+            });
+        });
+
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouseX = 0, mouseY = 0;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.3;
+                this.speedY = (Math.random() - 0.5) * 0.3;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+                const dx = mouseX - this.x;
+                const dy = mouseY - this.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 150) {
+                    this.x -= dx * 0.01;
+                    this.y -= dy * 0.01;
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = Math.min(80, Math.floor((canvas.width * canvas.height) / 15000));
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.08 * (1 - dist/120)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
         const navEl = document.querySelector('nav');
         const navHandle = document.getElementById('navHandle');
 
